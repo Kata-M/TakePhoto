@@ -24,8 +24,6 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-        personPic.image = UIImage(named: "face-1")
-        detect()
     }
 
     override func didReceiveMemoryWarning() {
@@ -50,15 +48,30 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
-        ImageDisplay.image = info[UIImagePickerControllerOriginalImage] as? UIImage;dismiss(animated: true, completion: nil)
-    }
-    
-    func detect() {
+      //  let im = UIImagePickerControllerOriginalImage
+      //  ImageDisplay.image = info[UIImagePickerControllerOriginalImage] as? UIImage;dismiss(animated: true, completion: nil)
+     //       print("past ImageDisplay.image")
+       
+        let chosenImage = info[UIImagePickerControllerOriginalImage] as! UIImage
+        let chosenImageView = UIImageView();
+        chosenImageView.image = chosenImage
+       // personPic.image = chosenImage
+
+        print(":D")
+        detect(_uiimageView: chosenImageView)
+                print("detect")
+        dismiss(animated:true, completion: nil)
+                print("CONGRATULATION YOU FINISHED GOAL")
         
-        guard let personciImage = CIImage(image: personPic.image!) else {
+
+    }
+    //new part below
+    func detect(_uiimageView:UIImageView) {
+        
+        guard let personciImage = CIImage(image: _uiimageView.image!) else {
             return
         }
-        
+        print("personciImage")
         let accuracy = [CIDetectorAccuracy: CIDetectorAccuracyHigh]
         let faceDetector = CIDetector(ofType: CIDetectorTypeFace, context: nil, options: accuracy)
         let faces = faceDetector?.features(in: personciImage)
@@ -75,9 +88,24 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             
             // Apply the transform to convert the coordinates
             var faceViewBounds = face.bounds.applying(transform)
+            print("faceViewBounds after transformation are \(faceViewBounds)")
             
+            
+            //------------
+            //Placing coordinates to Rect for cropping
+            let xF = faceViewBounds.minX
+            let yF = faceViewBounds.minY
+            let widthF = faceViewBounds.width * 0.95
+            let heightF = faceViewBounds.height * 0.95
+            let rect = CGRect(x:xF,y: yF, width: widthF, height:heightF)
+            print("Got past initialization of rect")
+            print("x: \(xF)")
+            print("y: \(yF)")
+            print("width: \(widthF)")
+            print("height: \(heightF)")
+            //------------
             // Calculate the actual position and size of the rectangle in the image view
-            let viewSize = personPic.bounds.size
+            /*let viewSize = _uiimageView.bounds.size
             let scale = min(viewSize.width / ciImageSize.width,
                             viewSize.height / ciImageSize.height)
             let offsetX = (viewSize.width - ciImageSize.width * scale) / 2
@@ -90,11 +118,15 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             faceViewBounds.origin.y += biggerY
             
             let faceBox = UIView(frame: faceViewBounds)
-            
+            print("faceBox")
             faceBox.layer.borderWidth = 3
             faceBox.layer.borderColor = UIColor.red.cgColor
             faceBox.backgroundColor = UIColor.clear
-            personPic.addSubview(faceBox)
+            _uiimageView.addSubview(faceBox)
+            */
+            //---------
+          
+
             
             if face.hasLeftEyePosition {
                 print("Left eye bounds are \(face.leftEyePosition)")
@@ -104,12 +136,14 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
                 print("Right eye bounds are \(face.rightEyePosition)")
             }
             
-            let rect = CGRect(x:0.00,y: 0.00,width: 100.00,height: 100.00)
-            print("Got past initialization of rect")
+           // let rect = CGRect(x:85.0,y: 333.0,width: 372.0,height: 372.0)
+           // print("Got past initialization of rect")
             
-            let croppedPhoto = crop(image: personPic.image!, cropRect: rect)
-            print("Got past let croppedPhoto")
+            let croppedPhoto = crop(image: _uiimageView.image!, cropRect: rect)
+            print("Got past let croppedPhoto and CROP")
+            ImageDisplay.image = croppedPhoto
             
+            print("Got past ImageDisplay")
             //save(croppedPhoto!)
             
         }
@@ -141,7 +175,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     //MARK: - Add image to Library
-    func image(_ image: UIImage, didFinishSavingWithError error: Error?, contextInfo: UnsafeRawPointer) {
+    @objc func image(_ image: UIImage, didFinishSavingWithError error: Error?, contextInfo: UnsafeRawPointer) {
         if let error = error {
             // we got back an error!
             let ac = UIAlertController(title: "Save error", message: error.localizedDescription, preferredStyle: .alert)
@@ -153,15 +187,6 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             present(ac, animated: true)
         }
     }
-    
-    //MARK: - Done image capture here
-    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
-        imagePicker.dismiss(animated: true, completion: nil)
-        imageTake.image = info[UIImagePickerControllerOriginalImage] as? UIImage
-    }
-    
-    
-    
-    
+
 }
 
